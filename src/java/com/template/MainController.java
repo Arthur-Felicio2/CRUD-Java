@@ -127,6 +127,12 @@ public class MainController {
         btnEditarAction(event);
     }
 
+    // NOVO: Botão Limpar Campos
+    @FXML
+    private void btnLimparAction(ActionEvent event) {
+        limparCampos();
+    }
+
     // Auxiliar para ler os campos do formulário com segurança de tipos
     private RpgDTO pegarDadosDosCampos() {
         RpgDTO dto = new RpgDTO();

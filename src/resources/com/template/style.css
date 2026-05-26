@@ -1,0 +1,95 @@
+/* =======================================================
+   ESTILO DA TAVERNA (TEMA RPG)
+   ======================================================= */
+
+/* --- TABELA GERAL --- */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: #c49a6c;
+    -fx-border-radius: 6px;
+    -fx-border-width: 2px;
+}
+
+/* Oculta a linha extra vazia no final da tabela */
+.table-view .filler {
+    -fx-background-color: transparent;
+}
+
+/* --- CABEÇALHO DA TABELA --- */
+.table-view .column-header-background {
+    -fx-background-color: #c49a6c; /* Cor de couro claro/madeira */
+    -fx-background-radius: 4px 4px 0px 0px;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 40px;
+    -fx-border-color: #a88965;
+    -fx-border-width: 0 1 0 0; /* Linha divisória entre colunas */
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #3e2312; /* Cor de tinta nanquim */
+    -fx-font-family: "Segoe UI";
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER;
+}
+
+/* --- LINHAS DA TABELA (Pergaminho) --- */
+.table-row-cell {
+    -fx-background-color: #f7f1e6; /* Pergaminho claro */
+    -fx-border-color: transparent transparent #eaddcf transparent;
+    -fx-cell-size: 35px;
+}
+
+/* Linhas ímpares levemente mais escuras para facilitar a leitura */
+.table-row-cell:odd {
+    -fx-background-color: #f0e5d3;
+}
+
+/* Quando você clica/seleciona um herói */
+.table-row-cell:selected {
+    -fx-background-color: #8b5a2b; /* Marrom sela */
+}
+
+.table-row-cell:selected .text {
+    -fx-fill: white; /* Texto fica branco ao selecionar para dar contraste */
+}
+
+.table-cell {
+    -fx-text-fill: #5c3a21;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER;
+}
+
+/* --- BARRAS DE ROLAGEM (Estilo Madeira Rústica) --- */
+.scroll-bar:horizontal, .scroll-bar:vertical {
+    -fx-background-color: #eaddcf;
+    -fx-border-color: #c49a6c;
+}
+
+.scroll-bar:horizontal .track, .scroll-bar:vertical .track {
+    -fx-background-color: #eaddcf;
+    -fx-border-radius: 0;
+}
+
+.scroll-bar:horizontal .thumb, .scroll-bar:vertical .thumb {
+    -fx-background-color: #a88965;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.scroll-bar:horizontal .thumb:hover, .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #8b5a2b;
+}
+
+/* Esconder as setinhas padrão nas pontas da barra de rolagem */
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+}
