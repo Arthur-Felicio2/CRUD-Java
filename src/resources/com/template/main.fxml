@@ -176,7 +176,7 @@
                             <children>
                                 <ImageView fx:id="imgMascote" fitHeight="140.0" fitWidth="140.0" pickOnBounds="true" preserveRatio="true">
                                     <image>
-
+                                        <Image url="@dragon.gif" />
                                     </image>
                                 </ImageView>
                             </children>
