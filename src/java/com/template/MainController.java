@@ -163,5 +163,6 @@ public class MainController {
         txtAlinhamento.clear();
         txtInteligencia.clear();
         tblPersonagens.getSelectionModel().clearSelection();
+        txtNome.requestFocus();
     }
 }
