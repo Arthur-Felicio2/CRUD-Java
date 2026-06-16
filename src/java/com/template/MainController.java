@@ -3,13 +3,15 @@ package com.template;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import java.util.List;
+import java.util.Optional;
 
 public class MainController {
 
@@ -63,13 +65,13 @@ public class MainController {
         carregarPersonagens();
     }
 
-    // Método para atualizar a visualização da tabela (Passo 5)
+    // Método para atualizar a visualização da tabela
     private void carregarPersonagens() {
         List<RpgDTO> lista = rpgDAO.listar();
         tblPersonagens.setItems(FXCollections.observableArrayList(lista));
     }
 
-    // Ação ao clicar em uma linha da tabela (Passo 9)
+    // Ação ao clicar em uma linha da tabela
     @FXML
     private void carregarCampos(MouseEvent event) {
         RpgDTO selecionado = tblPersonagens.getSelectionModel().getSelectedItem();
@@ -89,9 +91,14 @@ public class MainController {
         }
     }
 
-    // Botão Adicionar (Passo 7)
+    // Botão Adicionar com Validação
     @FXML
     private void btnAdicionarAction(ActionEvent event) {
+        if (!isCamposValidos()) {
+            mostrarAlertaAviso("Atenção", "Faltam informações no pergaminho!", "Por favor, preencha todos os campos antes de alistar o aventureiro.");
+            return;
+        }
+
         RpgDTO novo = pegarDadosDosCampos();
         rpgDAO.inserir(novo);
         carregarPersonagens();
@@ -102,38 +109,59 @@ public class MainController {
     @FXML
     private void btnEditarAction(ActionEvent event) {
         if (!txtId.getText().isEmpty()) {
+            if (!isCamposValidos()) {
+                mostrarAlertaAviso("Atenção", "Campos incompletos!", "Preencha todas as informações para revisar o contrato do aventureiro.");
+                return;
+            }
             RpgDTO atualizado = pegarDadosDosCampos();
             atualizado.setId(Integer.parseInt(txtId.getText()));
             rpgDAO.atualizar(atualizado);
             carregarPersonagens();
             limparCampos();
+        } else {
+            mostrarAlertaAviso("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para revisar o contrato.");
         }
     }
 
-    // Botão Excluir
+    // Botão Excluir com Pop-up de Confirmação
     @FXML
     private void btnExcluirAction(ActionEvent event) {
         if (!txtId.getText().isEmpty()) {
-            int id = Integer.parseInt(txtId.getText());
-            rpgDAO.excluir(id);
-            carregarPersonagens();
-            limparCampos();
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Expulsar da Taverna");
+            alert.setHeaderText("Tem certeza disso?");
+            alert.setContentText("O aventureiro será banido do registro. Esta ação não pode ser desfeita.");
+
+            // Aguarda a resposta do usuário
+            Optional<ButtonType> result = alert.showAndWait();
+
+            // Se o usuário clicou em OK, prossegue com a exclusão
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                int id = Integer.parseInt(txtId.getText());
+                rpgDAO.excluir(id);
+                carregarPersonagens();
+                limparCampos();
+            }
+            // Se clicou em Cancelar ou fechou, não faz nada e o registro permanece.
+        } else {
+            mostrarAlertaAviso("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para expulsar da taverna.");
         }
     }
 
-    // Botão Salvar (pode ser usado como alternativa para Editar/Atualizar)
+    // Botão Salvar
     @FXML
     private void btnSalvarAction(ActionEvent event) {
         btnEditarAction(event);
     }
 
-    // NOVO: Botão Limpar Campos
+    // Botão Limpar Campos
     @FXML
     private void btnLimparAction(ActionEvent event) {
         limparCampos();
     }
 
-    // Auxiliar para ler os campos do formulário com segurança de tipos
+    // Auxiliar para ler os campos do formulário
     private RpgDTO pegarDadosDosCampos() {
         RpgDTO dto = new RpgDTO();
         dto.setNome(txtNome.getText());
@@ -149,7 +177,7 @@ public class MainController {
         return dto;
     }
 
-    // Auxiliar para resetar a tela pós-operação
+    // Auxiliar para resetar a tela
     private void limparCampos() {
         txtId.clear();
         txtNome.clear();
@@ -164,5 +192,28 @@ public class MainController {
         txtInteligencia.clear();
         tblPersonagens.getSelectionModel().clearSelection();
         txtNome.requestFocus();
+    }
+
+    //verifica se os campos estão preenchidos
+    private boolean isCamposValidos() {
+        return !txtNome.getText().trim().isEmpty() &&
+                !txtRaca.getText().trim().isEmpty() &&
+                !txtClasse.getText().trim().isEmpty() &&
+                !txtNivel.getText().trim().isEmpty() &&
+                !txtVida.getText().trim().isEmpty() &&
+                !txtMana.getText().trim().isEmpty() &&
+                !txtForca.getText().trim().isEmpty() &&
+                !txtDestreza.getText().trim().isEmpty() &&
+                !txtInteligencia.getText().trim().isEmpty() &&
+                !txtAlinhamento.getText().trim().isEmpty();
+    }
+
+    //exibe o aviso
+    private void mostrarAlertaAviso(String titulo, String cabecalho, String conteudo) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(titulo);
+        alert.setHeaderText(cabecalho);
+        alert.setContentText(conteudo);
+        alert.showAndWait();
     }
 }
