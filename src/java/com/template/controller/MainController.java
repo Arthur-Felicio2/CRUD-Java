@@ -1,17 +1,17 @@
-package com.template;
+package com.template.controller;
 
+import com.template.model.dao.RpgDAO;
+import com.template.model.dto.RpgDTO;
+import com.template.util.DialogUtil;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import java.util.List;
-import java.util.Optional;
 
 public class MainController {
 
@@ -46,9 +46,7 @@ public class MainController {
 
     @FXML
     private void initialize() {
-        System.out.println("FXML carregado com sucesso!");
-
-        // Mapeia as propriedades do DTO para cada coluna correspondente (Passo 6)
+        // Mapeia as propriedades do DTO para cada coluna correspondente
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colRaca.setCellValueFactory(new PropertyValueFactory<>("raca"));
@@ -65,13 +63,11 @@ public class MainController {
         carregarPersonagens();
     }
 
-    // Método para atualizar a visualização da tabela
     private void carregarPersonagens() {
         List<RpgDTO> lista = rpgDAO.listar();
         tblPersonagens.setItems(FXCollections.observableArrayList(lista));
     }
 
-    // Ação ao clicar em uma linha da tabela
     @FXML
     private void carregarCampos(MouseEvent event) {
         RpgDTO selecionado = tblPersonagens.getSelectionModel().getSelectedItem();
@@ -91,11 +87,10 @@ public class MainController {
         }
     }
 
-    // Botão Adicionar com Validação
     @FXML
     private void btnAdicionarAction(ActionEvent event) {
         if (!isCamposValidos()) {
-            mostrarAlertaAviso("Atenção", "Faltam informações no pergaminho!", "Por favor, preencha todos os campos antes de alistar o aventureiro.");
+            DialogUtil.showWarning("Atenção", "Faltam informações no pergaminho!", "Por favor, preencha todos os campos antes de alistar o aventureiro.");
             return;
         }
 
@@ -105,12 +100,11 @@ public class MainController {
         limparCampos();
     }
 
-    // Botão Editar
     @FXML
     private void btnEditarAction(ActionEvent event) {
         if (!txtId.getText().isEmpty()) {
             if (!isCamposValidos()) {
-                mostrarAlertaAviso("Atenção", "Campos incompletos!", "Preencha todas as informações para revisar o contrato do aventureiro.");
+                DialogUtil.showWarning("Atenção", "Campos incompletos!", "Preencha todas as informações para revisar o contrato do aventureiro.");
                 return;
             }
             RpgDTO atualizado = pegarDadosDosCampos();
@@ -119,49 +113,40 @@ public class MainController {
             carregarPersonagens();
             limparCampos();
         } else {
-            mostrarAlertaAviso("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para revisar o contrato.");
+            DialogUtil.showWarning("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para revisar o contrato.");
         }
     }
 
-    // Botão Excluir com Pop-up de Confirmação
     @FXML
     private void btnExcluirAction(ActionEvent event) {
         if (!txtId.getText().isEmpty()) {
+            boolean confirmacao = DialogUtil.showConfirmation(
+                    "Expulsar da Taverna",
+                    "Tem certeza disso?",
+                    "O aventureiro será banido do registro. Esta ação não pode ser desfeita."
+            );
 
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Expulsar da Taverna");
-            alert.setHeaderText("Tem certeza disso?");
-            alert.setContentText("O aventureiro será banido do registro. Esta ação não pode ser desfeita.");
-
-            // Aguarda a resposta do usuário
-            Optional<ButtonType> result = alert.showAndWait();
-
-            // Se o usuário clicou em OK, prossegue com a exclusão
-            if (result.isPresent() && result.get() == ButtonType.OK) {
+            if (confirmacao) {
                 int id = Integer.parseInt(txtId.getText());
                 rpgDAO.excluir(id);
                 carregarPersonagens();
                 limparCampos();
             }
-            // Se clicou em Cancelar ou fechou, não faz nada e o registro permanece.
         } else {
-            mostrarAlertaAviso("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para expulsar da taverna.");
+            DialogUtil.showWarning("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para expulsar da taverna.");
         }
     }
 
-    // Botão Salvar
     @FXML
     private void btnSalvarAction(ActionEvent event) {
         btnEditarAction(event);
     }
 
-    // Botão Limpar Campos
     @FXML
     private void btnLimparAction(ActionEvent event) {
         limparCampos();
     }
 
-    // Auxiliar para ler os campos do formulário
     private RpgDTO pegarDadosDosCampos() {
         RpgDTO dto = new RpgDTO();
         dto.setNome(txtNome.getText());
@@ -177,7 +162,6 @@ public class MainController {
         return dto;
     }
 
-    // Auxiliar para resetar a tela
     private void limparCampos() {
         txtId.clear();
         txtNome.clear();
@@ -191,10 +175,8 @@ public class MainController {
         txtAlinhamento.clear();
         txtInteligencia.clear();
         tblPersonagens.getSelectionModel().clearSelection();
-        txtNome.requestFocus();
     }
 
-    //verifica se os campos estão preenchidos
     private boolean isCamposValidos() {
         return !txtNome.getText().trim().isEmpty() &&
                 !txtRaca.getText().trim().isEmpty() &&
@@ -206,14 +188,5 @@ public class MainController {
                 !txtDestreza.getText().trim().isEmpty() &&
                 !txtInteligencia.getText().trim().isEmpty() &&
                 !txtAlinhamento.getText().trim().isEmpty();
-    }
-
-    //exibe o aviso
-    private void mostrarAlertaAviso(String titulo, String cabecalho, String conteudo) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(titulo);
-        alert.setHeaderText(cabecalho);
-        alert.setContentText(conteudo);
-        alert.showAndWait();
     }
 }

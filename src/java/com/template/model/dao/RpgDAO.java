@@ -1,4 +1,8 @@
-package com.template;
+package com.template.model.dao;
+
+import com.template.model.Conexao;
+import com.template.model.dto.RpgDTO;
+import com.template.util.DialogUtil;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
@@ -24,17 +28,17 @@ public class RpgDAO {
 
         try (Connection conn = conexaoBanco.conectar()) {
             if (conn == null) {
-                System.err.println("[ERRO] Sem conexão com o banco de dados. Não foi possível inserir.");
+                DialogUtil.showError("Sem conexão com o banco de dados. Não foi possível inserir.");
                 return;
             }
             try (PreparedStatement pstm = conn.prepareStatement(sql)) {
                 configurarPreparedStatement(pstm, personagem);
                 pstm.executeUpdate();
-                System.out.println("\n[SISTEMA] Personagem '" + personagem.getNome() + "' conjurado com sucesso!");
+                DialogUtil.showInfo("Personagem '" + personagem.getNome() + "' conjurado com sucesso!");
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao inserir personagem: " + e.getMessage());
             LOGGER.log(Level.ERROR, "Erro ao inserir personagem: " + e.getMessage(), e);
+            DialogUtil.showError("Erro ao inserir personagem.");
         }
     }
 
@@ -44,7 +48,7 @@ public class RpgDAO {
 
         try (Connection conn = conexaoBanco.conectar()) {
             if (conn == null) {
-                System.err.println("[ERRO] Sem conexão com o banco de dados. Retornando lista vazia.");
+                DialogUtil.showError("Sem conexão com o banco de dados. Retornando lista vazia.");
                 return lista;
             }
             try (PreparedStatement pstm = conn.prepareStatement(sql);
@@ -68,8 +72,8 @@ public class RpgDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao listar personagens: " + e.getMessage());
             LOGGER.log(Level.ERROR, "Erro ao listar personagens do banco.", e);
+            DialogUtil.showError("Erro ao listar personagens.");
         }
         return lista;
     }
@@ -81,7 +85,7 @@ public class RpgDAO {
 
         try (Connection conn = conexaoBanco.conectar()) {
             if (conn == null) {
-                System.err.println("[ERRO] Sem conexão com o banco de dados. Não foi possível atualizar.");
+                DialogUtil.showError("Sem conexão com o banco de dados. Não foi possível atualizar.");
                 return;
             }
             try (PreparedStatement pstm = conn.prepareStatement(sql)) {
@@ -90,14 +94,14 @@ public class RpgDAO {
 
                 int linhasAfetadas = pstm.executeUpdate();
                 if (linhasAfetadas > 0) {
-                    System.out.println("\n[SISTEMA] Personagem atualizado com sucesso!");
+                    DialogUtil.showInfo("Personagem atualizado com sucesso!");
                 } else {
-                    System.out.println("\n[AVISO] ID não encontrado.");
+                    DialogUtil.showWarning("Aviso", "Não encontrado", "O ID selecionado não existe.");
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao atualizar personagem: " + e.getMessage());
             LOGGER.log(Level.ERROR, "Erro ao atualizar personagem ID: " + personagem.getId(), e);
+            DialogUtil.showError("Erro ao atualizar personagem.");
         }
     }
 
@@ -106,17 +110,17 @@ public class RpgDAO {
 
         try (Connection conn = conexaoBanco.conectar()) {
             if (conn == null) {
-                System.err.println("[ERRO] Sem conexão com o banco de dados. Não foi possível excluir.");
+                DialogUtil.showError("Sem conexão com o banco de dados. Não foi possível excluir.");
                 return;
             }
             try (PreparedStatement pstm = conn.prepareStatement(sql)) {
                 pstm.setInt(1, id);
                 pstm.executeUpdate();
-                System.out.println("\n[SISTEMA] Personagem banido do reino!");
+                DialogUtil.showInfo("Personagem banido do reino!");
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao excluir personagem: " + e.getMessage());
             LOGGER.log(Level.ERROR, "Erro ao excluir personagem ID: " + id, e);
+            DialogUtil.showError("Erro ao excluir personagem.");
         }
     }
 
