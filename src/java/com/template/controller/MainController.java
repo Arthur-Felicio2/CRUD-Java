@@ -1,8 +1,11 @@
 package com.template.controller;
 
-import com.template.model.dao.RpgDAO;
 import com.template.model.dto.RpgDTO;
+import com.template.service.IRpgService;
+import com.template.service.RpgService;
 import com.template.util.DialogUtil;
+import com.template.validator.RpgValidator;
+import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -11,42 +14,70 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
-import java.util.List;
 
 public class MainController {
 
     // Inputs de Texto
-    @FXML private TextField txtId;
-    @FXML private TextField txtNome;
-    @FXML private TextField txtRaca;
-    @FXML private TextField txtClasse;
-    @FXML private TextField txtNivel;
-    @FXML private TextField txtVida;
-    @FXML private TextField txtMana;
-    @FXML private TextField txtForca;
-    @FXML private TextField txtDestreza;
-    @FXML private TextField txtInteligencia;
-    @FXML private TextField txtAlinhamento;
+    @FXML
+    private TextField txtId;
+    @FXML
+    private TextField txtNome;
+    @FXML
+    private TextField txtRaca;
+    @FXML
+    private TextField txtClasse;
+    @FXML
+    private TextField txtNivel;
+    @FXML
+    private TextField txtVida;
+    @FXML
+    private TextField txtMana;
+    @FXML
+    private TextField txtForca;
+    @FXML
+    private TextField txtDestreza;
+    @FXML
+    private TextField txtInteligencia;
+    @FXML
+    private TextField txtAlinhamento;
 
     // Tabela e Colunas
-    @FXML private TableView<RpgDTO> tblPersonagens;
-    @FXML private TableColumn<RpgDTO, Integer> colId;
-    @FXML private TableColumn<RpgDTO, String> colNome;
-    @FXML private TableColumn<RpgDTO, String> colRaca;
-    @FXML private TableColumn<RpgDTO, String> colClasse;
-    @FXML private TableColumn<RpgDTO, Integer> colNivel;
-    @FXML private TableColumn<RpgDTO, Integer> colVida;
-    @FXML private TableColumn<RpgDTO, Integer> colMana;
-    @FXML private TableColumn<RpgDTO, Integer> colForca;
-    @FXML private TableColumn<RpgDTO, Integer> colDestreza;
-    @FXML private TableColumn<RpgDTO, String> colAlinhamento;
-    @FXML private TableColumn<RpgDTO, Integer> colInteligencia;
+    @FXML
+    private TableView<RpgDTO> tblPersonagens;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colId;
+    @FXML
+    private TableColumn<RpgDTO, String> colNome;
+    @FXML
+    private TableColumn<RpgDTO, String> colRaca;
+    @FXML
+    private TableColumn<RpgDTO, String> colClasse;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colNivel;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colVida;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colMana;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colForca;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colDestreza;
+    @FXML
+    private TableColumn<RpgDTO, String> colAlinhamento;
+    @FXML
+    private TableColumn<RpgDTO, Integer> colInteligencia;
 
-    private final RpgDAO rpgDAO = new RpgDAO();
+    // Instância baseada em interfaces[cite: 1]
+    private final IRpgService rpgService = new RpgService();
+    private final RpgValidator rpgValidator = new RpgValidator();
 
     @FXML
     private void initialize() {
-        // Mapeia as propriedades do DTO para cada coluna correspondente
+        configurarColunas();
+        carregarPersonagens();
+    }
+
+    private void configurarColunas() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colRaca.setCellValueFactory(new PropertyValueFactory<>("raca"));
@@ -58,14 +89,15 @@ public class MainController {
         colDestreza.setCellValueFactory(new PropertyValueFactory<>("atributoDestreza"));
         colAlinhamento.setCellValueFactory(new PropertyValueFactory<>("alinhamento"));
         colInteligencia.setCellValueFactory(new PropertyValueFactory<>("atributoInteligencia"));
-
-        // Carrega os dados na abertura do software
-        carregarPersonagens();
     }
 
     private void carregarPersonagens() {
-        List<RpgDTO> lista = rpgDAO.listar();
-        tblPersonagens.setItems(FXCollections.observableArrayList(lista));
+        try {
+            List<RpgDTO> lista = rpgService.listarPersonagens();
+            tblPersonagens.setItems(FXCollections.observableArrayList(lista));
+        } catch (Exception e) {
+            DialogUtil.showError("Erro ao carregar a lista de personagens do banco de dados.");
+        }
     }
 
     @FXML
@@ -89,29 +121,36 @@ public class MainController {
 
     @FXML
     private void btnAdicionarAction(ActionEvent event) {
-        if (!isCamposValidos()) {
-            DialogUtil.showWarning("Atenção", "Faltam informações no pergaminho!", "Por favor, preencha todos os campos antes de alistar o aventureiro.");
-            return;
-        }
-
         RpgDTO novo = pegarDadosDosCampos();
-        rpgDAO.inserir(novo);
-        carregarPersonagens();
-        limparCampos();
+
+        if (rpgValidator.validarPersonagem(novo)) {
+            try {
+                rpgService.cadastrarPersonagem(novo);
+                DialogUtil.showInfo("Personagem '" + novo.getNome() + "' conjurado com sucesso!");
+                carregarPersonagens();
+                limparCampos();
+            } catch (Exception e) {
+                DialogUtil.showError("Erro ao inserir personagem no banco.");
+            }
+        }
     }
 
     @FXML
     private void btnEditarAction(ActionEvent event) {
         if (!txtId.getText().isEmpty()) {
-            if (!isCamposValidos()) {
-                DialogUtil.showWarning("Atenção", "Campos incompletos!", "Preencha todas as informações para revisar o contrato do aventureiro.");
-                return;
-            }
             RpgDTO atualizado = pegarDadosDosCampos();
             atualizado.setId(Integer.parseInt(txtId.getText()));
-            rpgDAO.atualizar(atualizado);
-            carregarPersonagens();
-            limparCampos();
+
+            if (rpgValidator.validarPersonagem(atualizado)) {
+                try {
+                    rpgService.atualizarPersonagem(atualizado);
+                    DialogUtil.showInfo("Contrato do aventureiro revisado com sucesso!");
+                    carregarPersonagens();
+                    limparCampos();
+                } catch (Exception e) {
+                    DialogUtil.showError("Erro ao atualizar personagem.");
+                }
+            }
         } else {
             DialogUtil.showWarning("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para revisar o contrato.");
         }
@@ -127,10 +166,15 @@ public class MainController {
             );
 
             if (confirmacao) {
-                int id = Integer.parseInt(txtId.getText());
-                rpgDAO.excluir(id);
-                carregarPersonagens();
-                limparCampos();
+                try {
+                    int id = Integer.parseInt(txtId.getText());
+                    rpgService.excluirPersonagem(id);
+                    DialogUtil.showInfo("Personagem banido do reino!");
+                    carregarPersonagens();
+                    limparCampos();
+                } catch (Exception e) {
+                    DialogUtil.showError("Erro ao excluir personagem.");
+                }
             }
         } else {
             DialogUtil.showWarning("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para expulsar da taverna.");
@@ -152,6 +196,7 @@ public class MainController {
         dto.setNome(txtNome.getText());
         dto.setRaca(txtRaca.getText());
         dto.setClasse(txtClasse.getText());
+        // Utilizando parsing com fallback padrão para os numéricos em caso de campos vazios
         dto.setNivel(txtNivel.getText().isEmpty() ? 1 : Integer.parseInt(txtNivel.getText()));
         dto.setPontosVida(txtVida.getText().isEmpty() ? 0 : Integer.parseInt(txtVida.getText()));
         dto.setPontosMana(txtMana.getText().isEmpty() ? 0 : Integer.parseInt(txtMana.getText()));
@@ -175,18 +220,5 @@ public class MainController {
         txtAlinhamento.clear();
         txtInteligencia.clear();
         tblPersonagens.getSelectionModel().clearSelection();
-    }
-
-    private boolean isCamposValidos() {
-        return !txtNome.getText().trim().isEmpty() &&
-                !txtRaca.getText().trim().isEmpty() &&
-                !txtClasse.getText().trim().isEmpty() &&
-                !txtNivel.getText().trim().isEmpty() &&
-                !txtVida.getText().trim().isEmpty() &&
-                !txtMana.getText().trim().isEmpty() &&
-                !txtForca.getText().trim().isEmpty() &&
-                !txtDestreza.getText().trim().isEmpty() &&
-                !txtInteligencia.getText().trim().isEmpty() &&
-                !txtAlinhamento.getText().trim().isEmpty();
     }
 }
