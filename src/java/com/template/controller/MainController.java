@@ -17,59 +17,39 @@ import javafx.scene.input.MouseEvent;
 
 public class MainController {
 
-    // Inputs de Texto
-    @FXML
-    private TextField txtId;
-    @FXML
-    private TextField txtNome;
-    @FXML
-    private TextField txtRaca;
-    @FXML
-    private TextField txtClasse;
-    @FXML
-    private TextField txtNivel;
-    @FXML
-    private TextField txtVida;
-    @FXML
-    private TextField txtMana;
-    @FXML
-    private TextField txtForca;
-    @FXML
-    private TextField txtDestreza;
-    @FXML
-    private TextField txtInteligencia;
-    @FXML
-    private TextField txtAlinhamento;
+    @FXML private TextField txtId;
+    @FXML private TextField txtNome;
+    @FXML private TextField txtRaca;
+    @FXML private TextField txtClasse;
+    @FXML private TextField txtNivel;
+    @FXML private TextField txtVida;
+    @FXML private TextField txtMana;
+    @FXML private TextField txtForca;
+    @FXML private TextField txtDestreza;
+    @FXML private TextField txtInteligencia;
+    @FXML private TextField txtAlinhamento;
 
-    // Tabela e Colunas
-    @FXML
-    private TableView<RpgDTO> tblPersonagens;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colId;
-    @FXML
-    private TableColumn<RpgDTO, String> colNome;
-    @FXML
-    private TableColumn<RpgDTO, String> colRaca;
-    @FXML
-    private TableColumn<RpgDTO, String> colClasse;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colNivel;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colVida;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colMana;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colForca;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colDestreza;
-    @FXML
-    private TableColumn<RpgDTO, String> colAlinhamento;
-    @FXML
-    private TableColumn<RpgDTO, Integer> colInteligencia;
+    @FXML private TableView<RpgDTO> tblPersonagens;
+    @FXML private TableColumn<RpgDTO, Integer> colId;
+    @FXML private TableColumn<RpgDTO, String> colNome;
+    @FXML private TableColumn<RpgDTO, String> colRaca;
+    @FXML private TableColumn<RpgDTO, String> colClasse;
+    @FXML private TableColumn<RpgDTO, Integer> colNivel;
+    @FXML private TableColumn<RpgDTO, Integer> colVida;
+    @FXML private TableColumn<RpgDTO, Integer> colMana;
+    @FXML private TableColumn<RpgDTO, Integer> colForca;
+    @FXML private TableColumn<RpgDTO, Integer> colDestreza;
+    @FXML private TableColumn<RpgDTO, String> colAlinhamento;
+    @FXML private TableColumn<RpgDTO, Integer> colInteligencia;
 
-    // Instância baseada em interfaces[cite: 1]
-    private final IRpgService rpgService = new RpgService();
-    private final RpgValidator rpgValidator = new RpgValidator();
+    private final IRpgService rpgService;
+    private final RpgValidator rpgValidator;
+
+    // Construtor padrão (pode ser expandido para injeção via fábrica/FXMLLoader)
+    public MainController() {
+        this.rpgService = new RpgService();
+        this.rpgValidator = new RpgValidator();
+    }
 
     @FXML
     private void initialize() {
@@ -103,7 +83,6 @@ public class MainController {
     @FXML
     private void carregarCampos(MouseEvent event) {
         RpgDTO selecionado = tblPersonagens.getSelectionModel().getSelectedItem();
-
         if (selecionado != null) {
             txtId.setText(String.valueOf(selecionado.getId()));
             txtNome.setText(selecionado.getNome());
@@ -127,8 +106,7 @@ public class MainController {
             try {
                 rpgService.cadastrarPersonagem(novo);
                 DialogUtil.showInfo("Personagem '" + novo.getNome() + "' conjurado com sucesso!");
-                carregarPersonagens();
-                limparCampos();
+                atualizarTela();
             } catch (Exception e) {
                 DialogUtil.showError("Erro ao inserir personagem no banco.");
             }
@@ -137,47 +115,47 @@ public class MainController {
 
     @FXML
     private void btnEditarAction(ActionEvent event) {
-        if (!txtId.getText().isEmpty()) {
-            RpgDTO atualizado = pegarDadosDosCampos();
-            atualizado.setId(Integer.parseInt(txtId.getText()));
-
-            if (rpgValidator.validarPersonagem(atualizado)) {
-                try {
-                    rpgService.atualizarPersonagem(atualizado);
-                    DialogUtil.showInfo("Contrato do aventureiro revisado com sucesso!");
-                    carregarPersonagens();
-                    limparCampos();
-                } catch (Exception e) {
-                    DialogUtil.showError("Erro ao atualizar personagem.");
-                }
-            }
-        } else {
+        if (txtId.getText().isEmpty()) {
             DialogUtil.showWarning("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para revisar o contrato.");
+            return;
+        }
+
+        RpgDTO atualizado = pegarDadosDosCampos();
+        atualizado.setId(Integer.parseInt(txtId.getText()));
+
+        if (rpgValidator.validarPersonagem(atualizado)) {
+            try {
+                rpgService.atualizarPersonagem(atualizado);
+                DialogUtil.showInfo("Contrato do aventureiro revisado com sucesso!");
+                atualizarTela();
+            } catch (Exception e) {
+                DialogUtil.showError("Erro ao atualizar personagem.");
+            }
         }
     }
 
     @FXML
     private void btnExcluirAction(ActionEvent event) {
-        if (!txtId.getText().isEmpty()) {
-            boolean confirmacao = DialogUtil.showConfirmation(
-                    "Expulsar da Taverna",
-                    "Tem certeza disso?",
-                    "O aventureiro será banido do registro. Esta ação não pode ser desfeita."
-            );
-
-            if (confirmacao) {
-                try {
-                    int id = Integer.parseInt(txtId.getText());
-                    rpgService.excluirPersonagem(id);
-                    DialogUtil.showInfo("Personagem banido do reino!");
-                    carregarPersonagens();
-                    limparCampos();
-                } catch (Exception e) {
-                    DialogUtil.showError("Erro ao excluir personagem.");
-                }
-            }
-        } else {
+        if (txtId.getText().isEmpty()) {
             DialogUtil.showWarning("Atenção", "Nenhum aventureiro selecionado", "Selecione alguém na tabela para expulsar da taverna.");
+            return;
+        }
+
+        boolean confirmacao = DialogUtil.showConfirmation(
+                "Expulsar da Taverna",
+                "Tem certeza disso?",
+                "O aventureiro será banido do registro. Esta ação não pode ser desfeita."
+        );
+
+        if (confirmacao) {
+            try {
+                int id = Integer.parseInt(txtId.getText());
+                rpgService.excluirPersonagem(id);
+                DialogUtil.showInfo("Personagem banido do reino!");
+                atualizarTela();
+            } catch (Exception e) {
+                DialogUtil.showError("Erro ao excluir personagem.");
+            }
         }
     }
 
@@ -191,20 +169,35 @@ public class MainController {
         limparCampos();
     }
 
+    private void atualizarTela() {
+        carregarPersonagens();
+        limparCampos();
+    }
+
     private RpgDTO pegarDadosDosCampos() {
         RpgDTO dto = new RpgDTO();
         dto.setNome(txtNome.getText());
         dto.setRaca(txtRaca.getText());
         dto.setClasse(txtClasse.getText());
-        // Utilizando parsing com fallback padrão para os numéricos em caso de campos vazios
-        dto.setNivel(txtNivel.getText().isEmpty() ? 1 : Integer.parseInt(txtNivel.getText()));
-        dto.setPontosVida(txtVida.getText().isEmpty() ? 0 : Integer.parseInt(txtVida.getText()));
-        dto.setPontosMana(txtMana.getText().isEmpty() ? 0 : Integer.parseInt(txtMana.getText()));
-        dto.setAtributoForca(txtForca.getText().isEmpty() ? 0 : Integer.parseInt(txtForca.getText()));
-        dto.setAtributoDestreza(txtDestreza.getText().isEmpty() ? 0 : Integer.parseInt(txtDestreza.getText()));
+        dto.setNivel(parseIntegerOrDefault(txtNivel.getText(), 1));
+        dto.setPontosVida(parseIntegerOrDefault(txtVida.getText(), 0));
+        dto.setPontosMana(parseIntegerOrDefault(txtMana.getText(), 0));
+        dto.setAtributoForca(parseIntegerOrDefault(txtForca.getText(), 0));
+        dto.setAtributoDestreza(parseIntegerOrDefault(txtDestreza.getText(), 0));
         dto.setAlinhamento(txtAlinhamento.getText());
-        dto.setAtributoInteligencia(txtInteligencia.getText().isEmpty() ? 0 : Integer.parseInt(txtInteligencia.getText()));
+        dto.setAtributoInteligencia(parseIntegerOrDefault(txtInteligencia.getText(), 0));
         return dto;
+    }
+
+    private int parseIntegerOrDefault(String text, int defaultValue) {
+        if (text == null || text.trim().isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     private void limparCampos() {
